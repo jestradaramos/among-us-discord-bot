@@ -37,7 +37,7 @@ async def on_message(message):
         await death(message)
 
     if message.content == '!cleanup':
-        print('clean')
+        await clean(message)
     
     if message.content == '!restart':
         await restart(message)
@@ -140,5 +140,30 @@ async def restart(message):
         await member.move_to(vc_lobby)
     
     await message.channel.send("New Game!")
+
+async def clean(message):
+    guild = message.guild
+
+    vc_lobby = next((vc for vc in guild.voice_channels if vc.name == "Among Us Lobby"), None)
+    if vc_lobby == None:
+        print(f'error')
+    
+    vc_grave = next((vc for vc in guild.voice_channels if vc.name == "Among Us Grave"), None)
+    if vc_grave == None:
+        print(f'error')
+
+    role = next((r for r in guild.roles if r.name == "dead"), None)
+    if role == None:
+        print('error')
+    
+    category = next((c for c in guild.categories if c.name == "Among Us"), None)
+    if role == None:
+        print('error')
+
+    await vc_lobby.delete()
+    await vc_grave.delete()
+    await role.delete()
+    await category.delete()
+    
 
 client.run(TOKEN)
