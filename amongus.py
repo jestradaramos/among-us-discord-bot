@@ -20,7 +20,6 @@ async def on_ready():
         )
         
         members = '\n -'.join([member.name for member in guild.members])
-        print(guild.member_count)
         print(f'Guild Members:\n - {members}')
         print(f'\n')
     
@@ -31,19 +30,52 @@ async def on_message(message):
         return
     
     if message.content == '!start':
-        guild = message.guild
-        
+        await setup_and_start(message)
+
+    if message.content == '!discuss':
+        print('discuss')
+
+    if message.content == '!dead':
+        death(message)
+
+    if message.content == '!spectator':
+        print('spectator')
+
+async def setup_and_start(message):
+    guild = message.guild
+
+    # Setting Up the Server for Among Us
+    # Create a category and necessary voice channels
+    category = next((cat for cat in guild.categories if cat.name == "Among Us"), None)
+    if category == None: 
+        await guild.create_category("Among Us")
         category = next((cat for cat in guild.categories if cat.name == "Among Us"), None)
-        if category == None: 
-            await guild.create_category("Among Us")
-            category = next((cat for cat in guild.categories if cat.name == "Among Us"), None)
 
-        if not any(vc.name == "Among Us Lobby" for vc in guild.voice_channels):
-            await guild.create_voice_channel("Among Us Lobby", category=category)
-        if not any(vc.name == "Among Us Grave" for vc in guild.voice_channels):    
-            await guild.create_voice_channel("Among Us Grave", category=category)
+    if not any(vc.name == "Among Us Lobby" for vc in guild.voice_channels):
+        await guild.create_voice_channel("Among Us Lobby", category=category)
+    if not any(vc.name == "Among Us Grave" for vc in guild.voice_channels):    
+        await guild.create_voice_channel("Among Us Grave", category=category)
 
-        await message.channel.send("A round of Among Us has begun. Shhhh!")
+    # Create the dead role
+    if not any(role.name == 'dead' for role in guild.roles):
+        await guild.create_role(name="dead")
 
+    # Mute Everyone in the Lobby
+    vc = next((vc for vc in guild.voice_channels if vc.name == "Among Us Lobby"), None)
+    if vc == None:
+        print(f'error')
+    for member in vc.members:
+        await member.edit(mute=True)  
+    
+    await message.channel.send("A round of Among Us has begun. Shhhh!")
+
+async def death(message):
+    guild = message.guild
+    role = next((r for r in guild.roles if r.name == "dead"))
+
+    # Get all users
+    dead = message.mentions
+    for d in dead:
+        d.edit(roles=role)
 
 client.run(TOKEN)
