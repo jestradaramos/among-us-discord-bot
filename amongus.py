@@ -35,8 +35,8 @@ async def on_message(message):
     if message.content == '!discuss':
         print('discuss')
 
-    if message.content == '!dead':
-        death(message)
+    if '!dead' in message.content:
+        await death(message)
 
     if message.content == '!spectator':
         print('spectator')
@@ -71,11 +71,12 @@ async def setup_and_start(message):
 
 async def death(message):
     guild = message.guild
-    role = next((r for r in guild.roles if r.name == "dead"))
+    role = next((r for r in guild.roles if r.name == "dead"), None)
+    if role == None:
+        print('error')
 
-    # Get all users
-    dead = message.mentions
-    for d in dead:
-        d.edit(roles=role)
+    # Get all users mentioned and mark as dead
+    for d in message.mentions:
+        await d.edit(roles=[role])
 
 client.run(TOKEN)
