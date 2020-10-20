@@ -40,7 +40,7 @@ async def on_message(message):
         print('clean')
     
     if message.content == '!restart':
-        print('restart')
+        await restart(message)
 
 async def setup(message):
     guild = message.guild
@@ -114,5 +114,31 @@ async def discuss(message):
         await member.move_to(vc_lobby)
     
     await message.channel.send("Discuss!")
+
+async def restart(message):
+    guild = message.guild
+
+    # Unmute Everyone in the Lobby
+    vc_lobby = next((vc for vc in guild.voice_channels if vc.name == "Among Us Lobby"), None)
+    if vc_lobby == None:
+        print(f'error')
+    
+    vc_grave = next((vc for vc in guild.voice_channels if vc.name == "Among Us Grave"), None)
+    if vc_grave == None:
+        print(f'error')
+
+    role = next((r for r in guild.roles if r.name == "dead"), None)
+    if role == None:
+        print('error')
+
+    for member in vc_lobby.members:
+        await member.edit(mute=False)
+        await member.remove_roles(role)
+    
+    for member in vc_grave.members:
+        await member.remove_roles(role)
+        await member.move_to(vc_lobby)
+    
+    await message.channel.send("New Game!")
 
 client.run(TOKEN)
