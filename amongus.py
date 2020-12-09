@@ -33,7 +33,7 @@ async def on_message(message):
     if message.content == '!discuss':
         await discuss(message)
 
-    if '!dead' in message.content:
+    if '!k' in message.content:
         await death(message)
 
     if message.content == '!cleanup':
@@ -54,8 +54,6 @@ async def setup(message):
 
     if not any(vc.name == "Among Us Lobby" for vc in guild.voice_channels):
         await guild.create_voice_channel("Among Us Lobby", category=category)
-    if not any(vc.name == "Among Us Grave" for vc in guild.voice_channels):    
-        await guild.create_voice_channel("Among Us Grave", category=category)
 
     # Create the dead role
     if not any(role.name == 'dead' for role in guild.roles):
@@ -70,17 +68,12 @@ async def start(message):
     vc_lobby = next((vc for vc in guild.voice_channels if vc.name == "Among Us Lobby"), None)
     if vc_lobby == None:
         print(f'error')
-    
-    vc_grave = next((vc for vc in guild.voice_channels if vc.name == "Among Us Grave"), None)
-    if vc_grave == None:
-        print(f'error')
 
     for member in vc_lobby.members:
         if any(r.name == "dead" for r in member.roles):
-            await member.move_to(vc_grave)
             await member.edit(mute=False) 
         else:
-            await member.edit(mute=True)
+            await member.edit(deafen=True)
     
     await message.channel.send("A round of Among Us has begun. Shhhh!")
 
@@ -92,7 +85,8 @@ async def death(message):
 
     # Get all users mentioned and mark as dead
     for d in message.mentions:
-        await d.edit(roles=[role], mute=True)
+        await d.edit(mute=True)
+        await d.add_roles(role)
 
 async def discuss(message):
     guild = message.guild
@@ -101,17 +95,12 @@ async def discuss(message):
     vc_lobby = next((vc for vc in guild.voice_channels if vc.name == "Among Us Lobby"), None)
     if vc_lobby == None:
         print(f'error')
-    
-    vc_grave = next((vc for vc in guild.voice_channels if vc.name == "Among Us Grave"), None)
-    if vc_grave == None:
-        print(f'error')
 
     for member in vc_lobby.members:
-        await member.edit(mute=False)
-    
-    for member in vc_grave.members:
-        await member.edit(mute=True)
-        await member.move_to(vc_lobby)
+        if any(r.name == "dead" for r in member.roles):
+            await member.edit(mute=True) 
+        else:
+            await member.edit(deafen=False)
     
     await message.channel.send("Discuss!")
 
@@ -122,22 +111,14 @@ async def restart(message):
     vc_lobby = next((vc for vc in guild.voice_channels if vc.name == "Among Us Lobby"), None)
     if vc_lobby == None:
         print(f'error')
-    
-    vc_grave = next((vc for vc in guild.voice_channels if vc.name == "Among Us Grave"), None)
-    if vc_grave == None:
-        print(f'error')
 
     role = next((r for r in guild.roles if r.name == "dead"), None)
     if role == None:
         print('error')
 
     for member in vc_lobby.members:
-        await member.edit(mute=False)
+        await member.edit(mute=False, deafen=False)
         await member.remove_roles(role)
-    
-    for member in vc_grave.members:
-        await member.remove_roles(role)
-        await member.move_to(vc_lobby)
     
     await message.channel.send("New Game!")
 
